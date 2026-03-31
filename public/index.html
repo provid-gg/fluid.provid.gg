@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PROVID — Fluid</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+
+    <a href="/" class="brand">
+      <span class="brand-name">PROVID</span>
+      <span class="brand-sep">/</span>
+      <span class="brand-product">Fluid Video</span>
+    </a>
+
+    <nav class="center-nav">
+      <a href="#generate" class="cnav-link active">Generate</a>
+      <a href="#jobs"     class="cnav-link">Library</a>
+    </nav>
+
+    <div class="header-actions">
+      <span class="status-dot" id="statusDot" title="Connected"></span>
+
+      <button class="hdr-btn" id="cleanupBtn" title="Removes completed/failed videos older than 5 minutes">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        Clean up
+      </button>
+    </div>
+
+  </div>
+  <div class="header-rule"></div>
+</header>
+
+<section class="hero" id="generate">
+  <canvas class="hero-canvas" id="heroCanvas"></canvas>
+  <div class="hero-content">
+    <div class="hero-compat">
+      <span class="compat-badge">OBS Studio</span>
+      <span class="compat-sep">·</span>
+      <span class="compat-badge">vMix</span>
+      <span class="compat-sep">·</span>
+      <span class="compat-badge">Resolume</span>
+      <span class="compat-sep">·</span>
+      <span class="compat-badge">Any live software</span>
+    </div>
+    <h1 class="hero-title">Fluid<br /><span class="gradient-text">Video Backgrounds</span></h1>
+    <p class="hero-sub">Generate seamlessly looping animated MP4 gradients — ready for your live production in seconds.</p>
+  </div>
+</section>
+
+<main class="main-content">
+
+  <form id="generateForm" novalidate>
+
+    <div class="form-row-2">
+
+      <div class="card" id="colorsCard">
+        <div class="card-header">
+          <h2 class="card-title">Colors</h2>
+          <button type="button" class="icon-btn" id="addColorBtn" title="Add color stop">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add stop
+          </button>
+        </div>
+
+        <div class="gradient-strip" id="gradientStrip"></div>
+
+        <div class="color-list" id="colorList"></div>
+
+        <div class="presets-section">
+          <p class="section-micro">Presets</p>
+          <div class="preset-list" id="presetList">
+            <button type="button" class="preset" data-colors='["#facc15","#22d3ee","#2563eb"]'>
+              <span class="pswatch" style="background:linear-gradient(135deg,#facc15,#22d3ee,#2563eb)"></span>PROVID
+            </button>
+            <button type="button" class="preset" data-colors='["#f97316","#ec4899","#8b5cf6"]'>
+              <span class="pswatch" style="background:linear-gradient(135deg,#f97316,#ec4899,#8b5cf6)"></span>Sunset
+            </button>
+            <button type="button" class="preset" data-colors='["#22c55e","#06b6d4","#6366f1"]'>
+              <span class="pswatch" style="background:linear-gradient(135deg,#22c55e,#06b6d4,#6366f1)"></span>Matrix
+            </button>
+            <button type="button" class="preset" data-colors='["#ef4444","#f97316","#facc15"]'>
+              <span class="pswatch" style="background:linear-gradient(135deg,#ef4444,#f97316,#facc15)"></span>Fire
+            </button>
+            <button type="button" class="preset" data-colors='["#0ea5e9","#06b6d4","#22d3ee","#67e8f9"]'>
+              <span class="pswatch" style="background:linear-gradient(135deg,#0ea5e9,#06b6d4,#22d3ee,#67e8f9)"></span>Ocean
+            </button>
+            <button type="button" class="preset" data-colors='["#60a5fa","#818cf8","#c084fc","#f472b6"]'>
+              <span class="pswatch" style="background:linear-gradient(135deg,#60a5fa,#818cf8,#c084fc,#f472b6)"></span>Neon
+            </button>
+            <button type="button" class="preset" data-colors='["#ff0090","#ff4400","#00ffcc"]'>
+              <span class="pswatch" style="background:linear-gradient(135deg,#ff0090,#ff4400,#00ffcc)"></span>Cyber
+            </button>
+            <button type="button" class="preset" data-colors='["#7c3aed","#4f46e5","#2563eb","#0ea5e9"]'>
+              <span class="pswatch" style="background:linear-gradient(135deg,#7c3aed,#4f46e5,#2563eb,#0ea5e9)"></span>Deep Space
+            </button>
+            <button type="button" class="preset" data-colors='["#f43f5e","#fb7185","#fda4af","#fecdd3"]'>
+              <span class="pswatch" style="background:linear-gradient(135deg,#f43f5e,#fb7185,#fda4af,#fecdd3)"></span>Rose
+            </button>
+            <button type="button" class="preset" data-colors='["#166534","#16a34a","#4ade80","#bbf7d0"]'>
+              <span class="pswatch" style="background:linear-gradient(135deg,#166534,#16a34a,#4ade80,#bbf7d0)"></span>Forest
+            </button>
+            <button type="button" class="preset" data-colors='["#fbbf24","#f59e0b","#d97706","#b45309"]'>
+              <span class="pswatch" style="background:linear-gradient(135deg,#fbbf24,#f59e0b,#d97706,#b45309)"></span>Gold
+            </button>
+            <button type="button" class="preset" data-colors='["#e2e8f0","#94a3b8","#475569","#1e293b"]'>
+              <span class="pswatch" style="background:linear-gradient(135deg,#e2e8f0,#94a3b8,#475569,#1e293b)"></span>Silver
+            </button>
+            <button type="button" class="preset" data-colors='["#be185d","#9d174d","#831843","#500724"]'>
+              <span class="pswatch" style="background:linear-gradient(135deg,#be185d,#9d174d,#831843,#500724)"></span>Ruby
+            </button>
+            <button type="button" class="preset" data-colors='["#22d3ee","#34d399","#a3e635","#fbbf24"]'>
+              <span class="pswatch" style="background:linear-gradient(135deg,#22d3ee,#34d399,#a3e635,#fbbf24)"></span>Tropical
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Effect</h2>
+          <span class="card-meta" id="effectDesc">Floating color orbs</span>
+        </div>
+        <div class="effect-grid" id="effectGrid">
+
+          <label class="effect-option" title="Classic plasma demo-scene">
+            <input type="radio" name="effect" value="plasma" checked />
+            <div class="effect-thumb">
+              <canvas class="effect-canvas" data-effect="plasma" width="160" height="90"></canvas>
+            </div>
+            <span>Plasma <span class="badge">CPU</span></span>
+          </label>
+
+          <label class="effect-option" title="RGB channel split + scanlines glitch">
+            <input type="radio" name="effect" value="glitch" />
+            <div class="effect-thumb">
+              <canvas class="effect-canvas" data-effect="glitch" width="160" height="90"></canvas>
+            </div>
+            <span>Glitch <span class="badge">CPU</span></span>
+          </label>
+
+          <label class="effect-option" title="Neon wave lines">
+            <input type="radio" name="effect" value="wave" />
+            <div class="effect-thumb">
+              <canvas class="effect-canvas" data-effect="wave" width="160" height="90"></canvas>
+            </div>
+            <span>Wave</span>
+          </label>
+
+          <label class="effect-option" title="Mesh Flow">
+            <input type="radio" name="effect" value="mesh" />
+            <div class="effect-thumb">
+              <canvas class="effect-canvas" data-effect="mesh" width="160" height="90"></canvas>
+            </div>
+            <span>Mesh Flow</span>
+          </label>
+
+          <label class="effect-option" title="Aurora Borealis">
+            <input type="radio" name="effect" value="aurora" />
+            <div class="effect-thumb">
+              <canvas class="effect-canvas" data-effect="aurora" width="160" height="90"></canvas>
+            </div>
+            <span>Aurora</span>
+          </label>
+
+          <label class="effect-option" title="Spinning vortex">
+            <input type="radio" name="effect" value="vortex" />
+            <div class="effect-thumb">
+              <canvas class="effect-canvas" data-effect="vortex" width="160" height="90"></canvas>
+            </div>
+            <span>Vortex</span>
+          </label>
+
+          <label class="effect-option" title="Deep space nebula clouds">
+            <input type="radio" name="effect" value="nebula" />
+            <div class="effect-thumb">
+              <canvas class="effect-canvas" data-effect="nebula" width="160" height="90"></canvas>
+            </div>
+            <span>Nebula</span>
+          </label>
+
+          <label class="effect-option" title="Pulsing concentric rings">
+            <input type="radio" name="effect" value="pulse" />
+            <div class="effect-thumb">
+              <canvas class="effect-canvas" data-effect="pulse" width="160" height="90"></canvas>
+            </div>
+            <span>Pulse</span>
+          </label>
+
+          <label class="effect-option" title="Organic lava lamp blobs">
+            <input type="radio" name="effect" value="lava" />
+            <div class="effect-thumb">
+              <canvas class="effect-canvas" data-effect="lava" width="160" height="90"></canvas>
+            </div>
+            <span>Lava</span>
+          </label>
+
+          <label class="effect-option" title="Rotating light-ray beams from a lens">
+            <input type="radio" name="effect" value="prism" />
+            <div class="effect-thumb">
+              <canvas class="effect-canvas" data-effect="prism" width="160" height="90"></canvas>
+            </div>
+            <span>Prism</span>
+          </label>
+
+          <label class="effect-option" title="Glowing orbs on Lissajous paths">
+            <input type="radio" name="effect" value="particles" />
+            <div class="effect-thumb">
+              <canvas class="effect-canvas" data-effect="particles" width="160" height="90"></canvas>
+            </div>
+            <span>Particles</span>
+          </label>
+
+          <label class="effect-option" title="Spiral galaxy with arm structure">
+            <input type="radio" name="effect" value="galaxy" />
+            <div class="effect-thumb">
+              <canvas class="effect-canvas" data-effect="galaxy" width="160" height="90"></canvas>
+            </div>
+            <span>Galaxy</span>
+          </label>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row-3">
+
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Video</h2></div>
+        <div class="form-rows">
+          <div class="form-row">
+            <label class="form-label" for="resolution">Resolution</label>
+            <select class="form-select" id="resolution" name="resolution">
+              <option value="1280x720">1280 × 720 — HD</option>
+              <option value="1920x1080" selected>1920 × 1080 — Full HD</option>
+              <option value="2560x1440">2560 × 1440 — QHD</option>
+              <option value="3840x2160">3840 × 2160 — 4K UHD</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="fps">Frame rate</label>
+            <select class="form-select" id="fps" name="fps">
+              <option value="24">24 fps</option>
+              <option value="30" selected>30 fps</option>
+              <option value="60">60 fps</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="duration">
+              Duration <span class="form-hint" id="durationHint">10 s</span>
+            </label>
+            <div class="duration-input-row">
+              <input class="form-range" type="range" id="duration" name="duration" min="3" max="3600" value="10" step="1" />
+              <input class="form-input duration-num" type="number" id="durationNum" min="3" max="3600" value="10" step="1" title="Seconds" />
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="quality">Quality preset</label>
+            <select class="form-select" id="quality" name="quality">
+              <option value="draft">Draft — fast, bigger file</option>
+              <option value="standard" selected>Standard — balanced</option>
+              <option value="high">High — slow, smaller file</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Animation</h2></div>
+        <div class="form-rows">
+
+          <div class="form-row">
+            <label class="form-label" for="speed">
+              Speed <span class="form-hint" id="speedHint">1.0×</span>
+            </label>
+            <input class="form-range" type="range" id="speed" name="speed"
+              min="0.1" max="3" value="1" step="0.05" />
+            <div class="range-ticks">
+              <span>0.1×</span><span>slow</span><span>1×</span><span>fast</span><span>3×</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label class="form-label" for="intensity">
+              Intensity <span class="form-hint" id="intensityHint">1.0×</span>
+            </label>
+            <input class="form-range" type="range" id="intensity" name="intensity"
+              min="0.3" max="1.5" value="1" step="0.05" />
+          </div>
+
+          <div class="form-row form-row-cols">
+            <div class="form-col">
+              <label class="form-label" for="bgColor">Background</label>
+              <div class="color-input-wrap">
+                <div class="color-preview-sm" id="bgColorPreview" style="background:#000000"></div>
+                <input class="form-input" type="text" id="bgColorText" value="#000000" maxlength="7" placeholder="#000000" />
+                <input type="color" id="bgColor" value="#000000" class="hidden-color" />
+              </div>
+            </div>
+            <div class="form-col toggle-col">
+              <label class="form-label">Vignette</label>
+              <label class="toggle">
+                <input type="checkbox" id="vignette" name="vignette" />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <div class="form-row form-row-cols">
+            <div class="form-col">
+              <label class="form-label" for="countdownEnabled">Countdown overlay</label>
+              <span class="form-micro">Burns a timer into the video</span>
+            </div>
+            <div class="form-col toggle-col">
+              <label class="toggle">
+                <input type="checkbox" id="countdownEnabled" name="countdownEnabled" />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+          </div>
+
+          <div id="countdownSettings" style="display:none" class="countdown-settings">
+
+            <div class="form-row">
+              <label class="form-label">When to show</label>
+              <div class="cmode-pills" id="countdownModePills">
+                <button type="button" class="cmode-pill active" data-mode="end">Last N seconds</button>
+                <button type="button" class="cmode-pill" data-mode="full">Entire video</button>
+              </div>
+              <span class="form-micro" id="countdownModeDesc">Overlay appears only in the final seconds of the video</span>
+            </div>
+
+            <div class="form-row" id="countdownDurationRow">
+              <label class="form-label" for="countdownDuration">
+                Seconds before end
+                <span class="form-hint" id="countdownDurationHint">60 s</span>
+              </label>
+              <div class="duration-input-row">
+                <input class="form-range" type="range" id="countdownDuration" name="countdownDuration"
+                  min="1" max="3600" value="60" step="1" />
+                <input class="form-input duration-num" type="number" id="countdownDurationNum"
+                  min="1" max="3600" value="60" step="1" title="Seconds" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <label class="form-label" for="countdownStyle">Visual style</label>
+              <select class="form-select" id="countdownStyle" name="countdownStyle">
+                <option value="glow" selected>Glow — neon light effect</option>
+                <option value="clean">Clean — pure text, no background</option>
+                <option value="outline">Outline — hollow stroked text</option>
+                <option value="ring">Ring — progress arc with number</option>
+                <option value="pill">Pill — frosted horizontal badge</option>
+              </select>
+            </div>
+
+            <div class="form-row form-row-cols">
+              <div class="form-col">
+                <label class="form-label" for="countdownLabelText">Label <span class="form-micro">optional</span></label>
+                <input class="form-input" type="text" id="countdownLabelText" name="countdownLabelText"
+                  maxlength="60" placeholder="GOING LIVE IN" />
+              </div>
+              <div class="form-col">
+                <label class="form-label">Color</label>
+                <div class="color-input-wrap">
+                  <div class="color-preview-sm" id="countdownColorPreview" style="background:#ffffff"></div>
+                  <input class="form-input" type="text" id="countdownColorText" value="#FFFFFF" maxlength="7" placeholder="#FFFFFF" />
+                  <input type="color" id="countdownColor" value="#ffffff" class="hidden-color" />
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Export</h2></div>
+        <div class="form-rows">
+          <div class="form-row">
+            <label class="form-label" for="name">File name</label>
+            <input class="form-input" type="text" id="name" name="name" placeholder="fluid-bg" value="fluid-bg" />
+          </div>
+          <div class="info-row">
+            <div class="info-box">
+              <span class="info-label">Frames</span>
+              <span class="info-value" id="frameCount">300</span>
+            </div>
+            <div class="info-box">
+              <span class="info-label">Format</span>
+              <span class="info-value">MP4</span>
+            </div>
+            <div class="info-box">
+              <span class="info-label">Codec</span>
+              <span class="info-value">H.264</span>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-generate" id="generateBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span class="btn-label">Generate Video</span>
+        </button>
+        <div class="gen-status" id="genStatus" style="display:none"></div>
+      </div>
+
+    </div>
+  </form>
+
+  <section class="jobs-section" id="jobs">
+    <div class="jobs-hdr">
+      <h2 class="section-title">Library</h2>
+      <div class="jobs-hdr-right">
+        <div class="jobs-status-bar" id="jobsStatusBar" style="display:none">
+          <span class="jsb-item rendering" id="jsbRendering"></span>
+          <span class="jsb-item queued"    id="jsbQueued"></span>
+        </div>
+        <span class="jobs-count" id="jobsCount">0 videos</span>
+      </div>
+    </div>
+    <div class="jobs-grid" id="jobsGrid">
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span class="footer-logo">PROVID</span>
+      <span class="footer-tagline">Built for live productions</span>
+    </div>
+    <nav class="footer-nav">
+      <a href="https://provid.gg" target="_blank" rel="noopener">provid.gg</a>
+      <span class="footer-div">·</span>
+      <a href="https://provid.gg/legal/imprint" target="_blank" rel="noopener">Imprint</a>
+      <span class="footer-div">·</span>
+      <a href="https://provid.gg/legal/privacy" target="_blank" rel="noopener">Privacy</a>
+    </nav>
+    <p class="footer-copy">&copy; <span id="footerYear"></span> PROVID. All rights reserved.</p>
+  </div>
+</footer>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
