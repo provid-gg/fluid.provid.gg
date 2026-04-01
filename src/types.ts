@@ -38,7 +38,9 @@ export interface VideoConfig {
   intensity: number;
   bgColor: string;
   vignette: boolean;
+  perfectLoop?: boolean;
   countdown?: CountdownConfig;
+  audioAmplitudes?: number[];
 }
 
 export type JobStatus = 'pending' | 'processing' | 'completed' | 'failed';

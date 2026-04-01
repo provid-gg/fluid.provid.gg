@@ -9,6 +9,16 @@ import { renderEffect, applyVignette, renderCountdown } from './effects';
 export const OUTPUT_DIR = process.env.OUTPUT_DIR || path.join(process.cwd(), 'output');
 fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
+const MAX_AGE_MS = 2 * 60 * 60 * 1000;
+const cutoff = Date.now() - MAX_AGE_MS;
+for (const f of fs.readdirSync(OUTPUT_DIR)) {
+  if (!f.endsWith('.mp4')) continue;
+  const fp = path.join(OUTPUT_DIR, f);
+  try {
+    if (fs.statSync(fp).mtimeMs < cutoff) fs.unlinkSync(fp);
+  } catch {}
+}
+
 function parseRes(res: string): { width: number; height: number } {
   const [w, h] = res.split('x').map(Number);
   return { width: w, height: h };
@@ -86,6 +96,9 @@ async function generate(job: GenerationJob): Promise<string> {
 
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext('2d');
+  const blendFrames = config.perfectLoop ? Math.min(Math.round(config.fps * 1.2), Math.round(totalFrames * 0.12)) : 0;
+  const blendCanvas = config.perfectLoop && blendFrames > 0 ? createCanvas(width, height) : null;
+  const blendCtx    = blendCanvas ? blendCanvas.getContext('2d') : null;
   const ffmpegPath = process.env.FFMPEG_PATH ?? 'ffmpeg';
   const pixFmt = process.env.FFMPEG_PIX_FMT ?? 'bgra';
 
@@ -105,11 +118,26 @@ async function generate(job: GenerationJob): Promise<string> {
     proc.on('error', e => reject(new Error(`FFmpeg start failed: ${e.message}. Set FFMPEG_PATH or install ffmpeg.`)));
     proc.on('close', code => code === 0 ? resolve(outputFile) : reject(new Error(`FFmpeg code ${code}:\n${stderr.slice(-2000)}`)));
 
+    const audioTimes: number[] | null = (() => {
+      const amps = config.audioAmplitudes;
+      if (!amps || amps.length === 0) return null;
+      const smooth = new Array(amps.length);
+      smooth[0] = amps[0];
+      for (let k = 1; k < amps.length; k++) smooth[k] = 0.5 * amps[k] + 0.5 * smooth[k - 1];
+      const dt = 1 / config.fps;
+      const times = new Array(amps.length);
+      times[0] = 0;
+      for (let k = 1; k < amps.length; k++) times[k] = times[k - 1] + dt * config.speed * (0.15 + smooth[k] * 4.0);
+      return times;
+    })();
+
     const start = Date.now();
     (async () => {
       try {
         for (let i = 0; i < totalFrames; i++) {
-          const t = (i / config.fps) * config.speed;
+          const t = audioTimes
+            ? (audioTimes[i] ?? audioTimes[audioTimes.length - 1])
+            : (i / config.fps) * config.speed;
 
           ctx.fillStyle = config.bgColor || '#000000';
           ctx.fillRect(0, 0, width, height);
@@ -117,6 +145,18 @@ async function generate(job: GenerationJob): Promise<string> {
           renderEffect(ctx, t, width, height, config.colors, config.effect, config.intensity ?? 1.0);
 
           if (config.vignette) applyVignette(ctx, width, height);
+
+          if (config.perfectLoop && blendCtx && blendCanvas && i >= totalFrames - blendFrames) {
+            const blendAlpha = blendFrames > 1 ? (i - (totalFrames - blendFrames)) / (blendFrames - 1) : 1;
+            blendCtx.fillStyle = config.bgColor || '#000000';
+            blendCtx.fillRect(0, 0, width, height);
+            renderEffect(blendCtx, 0, width, height, config.colors, config.effect, config.intensity ?? 1.0);
+            if (config.vignette) applyVignette(blendCtx, width, height);
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, Math.min(1, blendAlpha));
+            ctx.drawImage(blendCanvas as unknown as import('canvas').Canvas, 0, 0);
+            ctx.restore();
+          }
 
           if (config.countdown?.enabled) {
             const cd      = config.countdown;

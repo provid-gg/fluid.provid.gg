@@ -32,6 +32,7 @@ const effectGrid      = document.getElementById('effectGrid');
 const effectDesc      = document.getElementById('effectDesc');
 const footerYear      = document.getElementById('footerYear');
 const durationNum            = document.getElementById('durationNum');
+const perfectLoopInput       = document.getElementById('perfectLoop');
 const countdownEnabled       = document.getElementById('countdownEnabled');
 const countdownSettings      = document.getElementById('countdownSettings');
 const countdownModePills     = document.getElementById('countdownModePills');
@@ -44,6 +45,16 @@ const countdownColorInput    = document.getElementById('countdownColor');
 const countdownColorText     = document.getElementById('countdownColorText');
 const countdownColorPreview  = document.getElementById('countdownColorPreview');
 const genStatus              = document.getElementById('genStatus');
+const audioSyncEnabled       = document.getElementById('audioSyncEnabled');
+const audioSyncSettings      = document.getElementById('audioSyncSettings');
+const audioUploadArea        = document.getElementById('audioUploadArea');
+const audioFileInput         = document.getElementById('audioFile');
+const audioUploadPlaceholder = document.getElementById('audioUploadPlaceholder');
+const audioFileInfo          = document.getElementById('audioFileInfo');
+const audioFileName          = document.getElementById('audioFileName');
+const audioFileDur           = document.getElementById('audioFileDur');
+const audioRemoveBtn         = document.getElementById('audioRemoveBtn');
+const audioSyncNote          = document.getElementById('audioSyncNote');
 
 footerYear.textContent = new Date().getFullYear();
 
@@ -62,7 +73,11 @@ socket.on('jobs:init', list => {
   renderJobsGrid();
 });
 socket.on('job:update', job => {
+  const wasNotDone = jobs.get(job.id)?.status !== 'completed';
   jobs.set(job.id, job);
+  if (wasNotDone && job.status === 'completed' && myJobIds.has(job.id)) {
+    notifyJobDone(job);
+  }
   renderJobsGrid();
 });
 socket.on('job:deleted', id => {
@@ -658,6 +673,95 @@ countdownEnabled.addEventListener('change', () => {
   countdownSettings.style.display = countdownEnabled.checked ? 'flex' : 'none';
 });
 
+let selectedAudioFile = null;
+const myJobIds = new Set();
+
+function requestNotifyPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    return Notification.requestPermission();
+  }
+  return Promise.resolve(typeof Notification !== 'undefined' ? Notification.permission : 'denied');
+}
+
+function notifyJobDone(job) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const n = new Notification('Video ready', {
+    body: job.config?.name ?? 'Your video has finished rendering.',
+    icon: '/favicon.ico',
+    tag: job.id,
+  });
+  n.onclick = () => { window.focus(); n.close(); };
+}
+
+audioSyncEnabled.addEventListener('change', () => {
+  audioSyncSettings.style.display = audioSyncEnabled.checked ? 'flex' : 'none';
+  if (audioSyncEnabled.checked) {
+    perfectLoopInput.checked = false;
+    perfectLoopInput.disabled = true;
+  } else {
+    perfectLoopInput.disabled = false;
+    clearAudioFile();
+  }
+});
+
+audioUploadArea.addEventListener('dragover', e => {
+  e.preventDefault();
+  audioUploadArea.classList.add('drag-over');
+});
+audioUploadArea.addEventListener('dragleave', () => audioUploadArea.classList.remove('drag-over'));
+audioUploadArea.addEventListener('drop', e => {
+  e.preventDefault();
+  audioUploadArea.classList.remove('drag-over');
+  const file = e.dataTransfer?.files?.[0];
+  if (file) setAudioFile(file);
+});
+
+audioFileInput.addEventListener('change', () => {
+  const file = audioFileInput.files?.[0];
+  if (file) setAudioFile(file);
+});
+
+audioRemoveBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  clearAudioFile();
+});
+
+function setAudioFile(file) {
+  selectedAudioFile = file;
+  audioFileName.textContent = file.name;
+  audioFileDur.textContent = '…';
+  audioUploadPlaceholder.style.display = 'none';
+  audioFileInfo.style.display = 'flex';
+  audioSyncNote.style.display = '';
+  durationRange.disabled = true;
+  durationNum.disabled = true;
+
+  const url = URL.createObjectURL(file);
+  const audio = new Audio(url);
+  audio.addEventListener('loadedmetadata', () => {
+    if (!isFinite(audio.duration) || isNaN(audio.duration)) { audioFileDur.textContent = 'unknown'; URL.revokeObjectURL(url); return; }
+    const s = Math.floor(audio.duration);
+    const mins = Math.floor(s / 60);
+    const secs = s - mins * 60;
+    audioFileDur.textContent = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+    durationRange.value = Math.min(3600, Math.max(3, s));
+    durationNum.value = Math.min(3600, Math.max(3, s));
+    updateFrameInfo();
+    URL.revokeObjectURL(url);
+  });
+  audio.addEventListener('error', () => { audioFileDur.textContent = 'unknown'; URL.revokeObjectURL(url); });
+}
+
+function clearAudioFile() {
+  selectedAudioFile = null;
+  audioFileInput.value = '';
+  audioUploadPlaceholder.style.display = 'flex';
+  audioFileInfo.style.display = 'none';
+  audioSyncNote.style.display = 'none';
+  durationRange.disabled = false;
+  durationNum.disabled = false;
+}
+
 countdownModePills.addEventListener('click', e => {
   const pill = e.target.closest('.cmode-pill');
   if (!pill) return;
@@ -717,6 +821,7 @@ bgColorText.addEventListener('input', () => {
 });
 
 function fmtSecs(s) {
+  s = Math.floor(s);
   if (s < 60)  return `${s} s`;
   if (s < 3600) {
     const m = Math.floor(s / 60), ss = s % 60;
@@ -781,7 +886,8 @@ generateForm.addEventListener('submit', async e => {
     speed:      parseFloat(speedRange.value),
     intensity:  parseFloat(intensityRange.value),
     bgColor:    bgColorInput.value,
-    vignette:   document.getElementById('vignette').checked,
+    vignette:     document.getElementById('vignette').checked,
+    perfectLoop:  perfectLoopInput.checked,
     countdown: countdownEnabled.checked ? {
       enabled:  true,
       duration: parseInt(countdownDuration.value, 10),
@@ -793,14 +899,25 @@ generateForm.addEventListener('submit', async e => {
   };
 
   generateBtn.disabled = true;
-  generateBtn.querySelector('.btn-label').textContent = 'Queued…';
+  generateBtn.querySelector('.btn-label').textContent = selectedAudioFile ? 'Analyzing…' : 'Queued…';
 
   try {
-    const res  = await fetch('/api/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+    let res;
+    if (selectedAudioFile) {
+      const fd = new FormData();
+      fd.append('config', JSON.stringify(payload));
+      fd.append('audio', selectedAudioFile);
+      res = await fetch('/api/generate', { method:'POST', body:fd });
+    } else {
+      res = await fetch('/api/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+    }
     const json = await res.json();
     if (!json.ok) throw new Error(json.error ?? 'Unknown error');
+    await requestNotifyPermission();
+    myJobIds.add(json.data.id);
     jobs.set(json.data.id, json.data);
     renderJobsGrid();
+    if (selectedAudioFile) clearAudioFile();
   } catch (err) {
     alert('Failed to start: ' + err.message);
   } finally {
