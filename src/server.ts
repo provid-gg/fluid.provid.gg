@@ -245,7 +245,7 @@ export function createApp() {
     }
   }, 10 * 60 * 1000);
 
-  app.get('*', (_req, res) => res.sendFile(path.join(__dirname,'..','public','index.html')));
+  app.get('/{*path}', (_req, res) => res.sendFile(path.join(__dirname,'..','public','index.html')));
 
   return { app, httpServer, io };
 }
