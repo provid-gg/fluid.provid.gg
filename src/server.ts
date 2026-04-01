@@ -5,6 +5,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { spawn } from 'child_process';
 import multer from 'multer';
+import morgan from "morgan";
 import {
   enqueueJob, getJob, getAllJobs, deleteJob,
   setProgressCallback, OUTPUT_DIR,
@@ -78,6 +79,7 @@ export function createApp() {
 
   app.use(express.json());
   app.use(express.static(path.join(__dirname, '..', 'public')));
+  app.use(morgan("combined"));
 
   setProgressCallback((job: GenerationJob) => { io.emit('job:update', job); });
 
